@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:noise_meter/noise_meter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
 
 void main() {
-  runApp(const DecibelMeterApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]).then((_) {
+    runApp(const DecibelMeterApp());
+  });
 }
 
 class DecibelMeterApp extends StatelessWidget {
