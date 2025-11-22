@@ -1,4 +1,4 @@
-# fnoise
+# fnoise-meter
 
 A new Flutter project.
 
