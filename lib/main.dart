@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+//Import per l'uso di SystemChrome
 import 'package:flutter/services.dart';
 import 'package:noise_meter/noise_meter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
 
 void main() {
+  //Essendoci istruzioni prima della chiamata runApp() è necessario esplicitare ensureInitialized()
   WidgetsFlutterBinding.ensureInitialized();
   
+  //Chiamata asincrona per forzare l'uso di portraitUp
+  //Essendo asincrona .then(_) aspetta la fine di DeviceOrientation per lanciare l'app
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]).then((_) {
@@ -15,7 +19,8 @@ void main() {
 }
 
 class DecibelMeterApp extends StatelessWidget {
-  const DecibelMeterApp({Key? key}) : super(key: key);
+  //coostruttore del Widget
+  const DecibelMeterApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +36,8 @@ class DecibelMeterApp extends StatelessWidget {
 }
 
 class DecibelMeterPage extends StatefulWidget {
-  const DecibelMeterPage({Key? key}) : super(key: key);
+  //coostruttore del Widget
+  const DecibelMeterPage({super.key});
 
   @override
   State<DecibelMeterPage> createState() => _DecibelMeterPageState();
