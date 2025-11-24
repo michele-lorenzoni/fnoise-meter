@@ -4,6 +4,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
 
 import '../utils/decibel_colors.dart' as db_colors;
+import '../../styles/light_theme.dart' as db_light_theme;
 
 class DecibelMeterPage extends StatefulWidget {
   //coostruttore del Widget
@@ -116,22 +117,6 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
     }
   }
 
-/*   Color _getDecibelColor(double db) {
-    if (db < 50) return Colors.green;
-    if (db < 70) return Colors.yellow;
-    if (db < 90) return Colors.orange;
-    return Colors.red;
-  }
-
-  String _getNoiseLevel(double db) {
-    if (db < 30) return 'Molto silenzioso';
-    if (db < 50) return 'Silenzioso';
-    if (db < 70) return 'Moderato';
-    if (db < 90) return 'Rumoroso';
-    if (db < 110) return 'Molto rumoroso';
-    return 'Estremamente rumoroso';
-  } */
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -163,7 +148,7 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
                       _currentDecibel.toStringAsFixed(1),
                       style: TextStyle(
                         fontSize: 60,
-                        fontWeight: FontWeight.bold,
+                        //fontWeight: FontWeight.bold,
                         color: db_colors.getDecibelColor(_currentDecibel),
                       ),
                     ),
