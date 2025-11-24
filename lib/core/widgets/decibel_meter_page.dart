@@ -3,7 +3,7 @@ import 'package:noise_meter/noise_meter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
 
-import '../utils/decibel_colors.dart' as db_colors;
+import 'package:fnoise_meter/core/utils/decibel_colors.dart' as db_colors;
 
 class DecibelMeterPage extends StatefulWidget {
   //coostruttore del Widget

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 //Import per l'uso di SystemChrome
 import 'package:flutter/services.dart';
 
-import 'core/widgets/decibel_meter_app.dart' as dma;
+import 'package:fnoise_meter/core/widgets/decibel_meter_app.dart' as dma;
 
 void main() {
   //Essendoci istruzioni prima della chiamata runApp() è necessario esplicitare ensureInitialized()
