@@ -1,48 +1,50 @@
-import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+/// Utility class per gestire i permessi del microfono
 class PermissionHandlerUtility {
-  // Metodo statico per richiedere il permesso.
-  // Ritorna true se il permesso è concesso, false altrimenti.
-  static Future<bool> requestMicrophonePermission(BuildContext context) async {
+  /// Richiede il permesso del microfono
+  /// Restituisce true se il permesso è stato concesso, false altrimenti
+  static Future<PermissionResult> requestMicrophonePermission() async {
     final status = await Permission.microphone.request();
-
+    
     if (status.isGranted) {
-      return true;
+      return PermissionResult.granted;
     } else if (status.isDenied) {
-      _showPermissionDialog(context, 'Permesso negato');
-      return false;
+      return PermissionResult.denied;
     } else if (status.isPermanentlyDenied) {
-      _showPermissionDialog(
-          context, 'Permesso negato permanentemente. Vai nelle impostazioni per abilitarlo.');
-      return false;
+      return PermissionResult.permanentlyDenied;
     }
-    return false;
+    
+    return PermissionResult.denied;
   }
+  
+  /// Controlla se il permesso del microfono è già stato concesso
+  static Future<bool> isMicrophonePermissionGranted() async {
+    final status = await Permission.microphone.status;
+    return status.isGranted;
+  }
+  
+  /// Apre le impostazioni dell'app
+  static Future<void> openSettings() async {
+    await openAppSettings();
+  }
+  
+  /// Ottiene il messaggio da mostrare all'utente in base allo stato del permesso
+  static String getPermissionMessage(PermissionResult result) {
+    switch (result) {
+      case PermissionResult.granted:
+        return 'Permesso concesso';
+      case PermissionResult.denied:
+        return 'Permesso negato';
+      case PermissionResult.permanentlyDenied:
+        return 'Permesso negato permanentemente. Vai nelle impostazioni per abilitarlo.';
+    }
+  }
+}
 
-  // Metodo per mostrare il dialogo di permesso (richiede il BuildContext).
-  static void _showPermissionDialog(BuildContext context, String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Permesso Microfono'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-          if (message.contains('impostazioni'))
-            TextButton(
-              onPressed: () {
-                // openAppSettings() è un metodo della libreria permission_handler
-                openAppSettings();
-                Navigator.pop(context);
-              },
-              child: const Text('Impostazioni'),
-            ),
-        ],
-      ),
-    );
-  }
+/// Enum per rappresentare il risultato della richiesta di permesso
+enum PermissionResult {
+  granted,
+  denied,
+  permanentlyDenied,
 }

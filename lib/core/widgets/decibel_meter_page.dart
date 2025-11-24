@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:noise_meter/noise_meter.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
 
 import 'package:fnoise_meter/core/utils/decibel_colors.dart' as db_colors;
-import 'package:fnoise_meter/core/utils/permission_handler_utility.dart' as perm_handler;
+import 'package:fnoise_meter/core/utils/permission_handler_utility.dart';
 
 class DecibelMeterPage extends StatefulWidget {
-  //coostruttore del Widget
   const DecibelMeterPage({super.key});
 
   @override
@@ -35,18 +33,22 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
     super.dispose();
   }
 
+  /// Richiede il permesso e gestisce il risultato
   Future<void> _requestPermission() async {
-    final status = await Permission.microphone.request();
-    if (status.isGranted) {
+    final result = await PermissionHandlerUtility.requestMicrophonePermission();
+    
+    if (result == PermissionResult.granted) {
       _startRecording();
-    } else if (status.isDenied) {
-      _showPermissionDialog('Permesso negato');
-    } else if (status.isPermanentlyDenied) {
-      _showPermissionDialog('Permesso negato permanentemente. Vai nelle impostazioni per abilitarlo.');
+    } else {
+      _showPermissionDialog(result);
     }
   }
 
-  void _showPermissionDialog(String message) {
+  /// Mostra un dialogo con il messaggio appropriato per il permesso
+  void _showPermissionDialog(PermissionResult result) {
+    final message = PermissionHandlerUtility.getPermissionMessage(result);
+    final isPermanentlyDenied = result == PermissionResult.permanentlyDenied;
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -57,10 +59,10 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
             onPressed: () => Navigator.pop(context),
             child: const Text('OK'),
           ),
-          if (message.contains('impostazioni'))
+          if (isPermanentlyDenied)
             TextButton(
               onPressed: () {
-                openAppSettings();
+                PermissionHandlerUtility.openSettings();
                 Navigator.pop(context);
               },
               child: const Text('Impostazioni'),
@@ -88,7 +90,7 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
         },
         onError: (error) {
           _stopRecording();
-          _showPermissionDialog('Errore nella lettura del microfono: $error');
+          _showErrorDialog('Errore nella lettura del microfono: $error');
         },
       );
       
@@ -98,7 +100,7 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
         _minDecibel = 0.0;
       });
     } catch (e) {
-      _showPermissionDialog('Errore: $e');
+      _showErrorDialog('Errore: $e');
     }
   }
 
@@ -115,6 +117,23 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
     } else {
       await _requestPermission();
     }
+  }
+
+  /// Mostra un dialogo per errori generici
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Errore'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -148,7 +167,6 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
                       _currentDecibel.toStringAsFixed(1),
                       style: TextStyle(
                         fontSize: 60,
-                        //fontWeight: FontWeight.bold,
                         color: db_colors.getDecibelColor(_currentDecibel),
                       ),
                     ),
