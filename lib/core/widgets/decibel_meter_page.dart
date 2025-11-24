@@ -4,7 +4,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dart:async';
 
 import '../utils/decibel_colors.dart' as db_colors;
-import '../../styles/light_theme.dart' as db_light_theme;
 
 class DecibelMeterPage extends StatefulWidget {
   //coostruttore del Widget
