@@ -6,6 +6,7 @@ import 'package:fnoise_meter/core/utils/decibel_colors.dart' as db_colors;
 import 'package:fnoise_meter/core/utils/permission_handler_utility.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:fnoise_meter/core/utils/notification_service.dart';
 
 class DecibelMeterPage extends StatefulWidget {
   const DecibelMeterPage({super.key});
@@ -91,7 +92,7 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
             }
 
             if (_currentDecibel >= 50) {
-              showSimpleNotification();
+              showSimpleNotification(flutterLocalNotificationsPlugin);
             }
           });
         },
@@ -154,26 +155,7 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
       ),
     );
   }
-
-  Future<void> showSimpleNotification() async {
-    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      'your_channel_id', // 1. ID del canale
-      'your_channel_name', // 2. Nome del canale
-      importance: Importance.max,
-      priority: Priority.high,
-      ticker: 'ticker',
-    );
-    var iOSPlatformChannelSpecifics = DarwinNotificationDetails();
-    var platformChannelSpecifics = NotificationDetails(
-        android: androidPlatformChannelSpecifics, iOS: iOSPlatformChannelSpecifics);
-    await flutterLocalNotificationsPlugin.show(
-      0,
-      'Hello!',
-      'This is a simple notification.',
-      platformChannelSpecifics,
-    );
-  }
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
