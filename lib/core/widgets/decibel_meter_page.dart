@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:fnoise_meter/core/utils/decibel_colors.dart' as db_colors;
 import 'package:fnoise_meter/core/utils/permission_handler_utility.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class DecibelMeterPage extends StatefulWidget {
   const DecibelMeterPage({super.key});
@@ -47,15 +48,15 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
   }
 
   /// Richiede il permesso e gestisce il risultato
-  Future<void> _requestMyMicrophonePermission() async {
-    final result = await PermissionHandlerUtility.requestMicrophonePermission();
+/*   Future<void> _requestMyMicrophonePermission() async {
+    final result = await PermissionHandlerUtility.requestMicrophonePermission(Permission.microphone);
     
     if (result == PermissionResult.granted) {
       _startRecording();
     } else {
       _showPermissionDialog(result);
     }
-  }
+  } */
 
   Future<void> _requestMyNotificationPermission() async {
     final bool? granted = await flutterLocalNotificationsPlugin
@@ -63,13 +64,13 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
             AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
 
- /* if(granted != null && granted) {
+    if(granted != null && granted) {
       print('Permesso notifica concesso!');
       // Puoi fare qualcosa se il permesso è concesso
     } else {
       print('Permesso notifica negato o non richiesto.');
       // Puoi mostrare un messaggio all'utente
-    } */
+    }
   }
 
   /// Mostra un dialogo con il messaggio appropriato per il permesso
@@ -114,6 +115,10 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
             if (_minDecibel == 0.0 || _currentDecibel < _minDecibel) {
               _minDecibel = _currentDecibel;
             }
+
+            if (_currentDecibel >= 50) {
+              showSimpleNotification();
+            }
           });
         },
         onError: (error) {
@@ -140,12 +145,22 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
   }
 
   void _toggleRecording() async {
-    await showSimpleNotification();
     if (_isRecording) {
       _stopRecording();
     } else {
-      await _requestMyMicrophonePermission();
+      // Prima richiedi il permesso del microfono
+      final micResult = await PermissionHandlerUtility.requestMicrophonePermission(Permission.microphone);
+      
+      if (micResult != PermissionResult.granted) {
+        _showPermissionDialog(micResult);
+        return; // Esci se il permesso non è concesso
+      }
+      
+      // Poi richiedi il permesso delle notifiche
       await _requestMyNotificationPermission();
+      
+      // Infine avvia la registrazione
+      _startRecording();
     }
   }
 
