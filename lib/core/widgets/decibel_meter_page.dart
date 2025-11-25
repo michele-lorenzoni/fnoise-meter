@@ -1,16 +1,153 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:fnoise_meter/core/utils/decibel_colors.dart' as db_colors;
 import 'package:fnoise_meter/core/utils/permission_handler_utility.dart';
 import 'package:fnoise_meter/core/utils/notification_service.dart';
-
 import 'package:fnoise_meter/core/widgets/status_card.dart';
-import 'package:fnoise_meter/core/widgets/decibel_display.dart';
 
+import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:noise_meter/noise_meter.dart';
 import 'package:permission_handler/permission_handler.dart';
+
+// ==========================================
+// INIZIALIZZAZIONE SERVIZIO BACKGROUND
+// ==========================================
+
+Future<void> initializeDecibelService() async {
+  final service = FlutterBackgroundService();
+
+  const AndroidNotificationChannel channel = AndroidNotificationChannel(
+    'decibel_meter_channel',
+    'Decibel Meter Service',
+    description: 'Questo canale è usato per il servizio di misurazione decibel',
+    importance: Importance.low,
+  );
+
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
+
+  await service.configure(
+    iosConfiguration: IosConfiguration(
+      autoStart: false,
+      onForeground: onStartDecibelService,
+      onBackground: onIosBackground,
+    ),
+    androidConfiguration: AndroidConfiguration(
+      onStart: onStartDecibelService,
+      autoStart: false,
+      isForegroundMode: true,
+      notificationChannelId: 'decibel_meter_channel',
+      initialNotificationTitle: 'Misuratore Decibel',
+      initialNotificationContent: 'In attesa di iniziare...',
+      foregroundServiceNotificationId: 888,
+    ),
+  );
+}
+
+@pragma('vm:entry-point')
+Future<bool> onIosBackground(ServiceInstance service) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  DartPluginRegistrant.ensureInitialized();
+  return true;
+}
+
+// ==========================================
+// SERVIZIO BACKGROUND
+// ==========================================
+
+@pragma('vm:entry-point')
+void onStartDecibelService(ServiceInstance service) async {
+  DartPluginRegistrant.ensureInitialized();
+
+  if (service is AndroidServiceInstance) {
+    service.on('setAsForeground').listen((event) {
+      service.setAsForegroundService();
+    });
+
+    service.on('setAsBackground').listen((event) {
+      service.setAsBackgroundService();
+    });
+  }
+
+  NoiseMeter? noiseMeter;
+  StreamSubscription<NoiseReading>? noiseSubscription;
+  
+  double currentDecibel = 0.0;
+  double maxDecibel = 0.0;
+  double minDecibel = 0.0;
+
+  // Ascolta il comando di stop
+  service.on('stopService').listen((event) {
+    noiseSubscription?.cancel();
+    noiseSubscription = null;
+    noiseMeter = null;
+    service.stopSelf();
+  });
+
+  // Ascolta il comando di start
+  service.on('startMeasuring').listen((event) async {
+    try {
+      noiseMeter = NoiseMeter();
+      
+      noiseSubscription = noiseMeter?.noise.listen(
+        (NoiseReading reading) {
+          currentDecibel = reading.meanDecibel;
+          
+          if (maxDecibel == 0.0 || currentDecibel > maxDecibel) {
+            maxDecibel = currentDecibel;
+          }
+          
+          if (minDecibel == 0.0 || currentDecibel < minDecibel) {
+            minDecibel = currentDecibel;
+          }
+
+          // Aggiorna la notifica foreground
+          if (service is AndroidServiceInstance) {
+            service.setForegroundNotificationInfo(
+              title: "Misuratore Decibel",
+              content: "${currentDecibel.toStringAsFixed(1)} dB",
+            );
+          }
+
+          // Invia dati all'UI
+          service.invoke('update', {
+            'current': currentDecibel,
+            'max': maxDecibel,
+            'min': minDecibel,
+          });
+        },
+        onError: (error) {
+          print('Errore noise meter: $error');
+          service.invoke('error', {'message': error.toString()});
+        },
+      );
+    } catch (e) {
+      print('Errore avvio misurazione: $e');
+      service.invoke('error', {'message': e.toString()});
+    }
+  });
+
+  // Timer per mantenere il servizio attivo
+  Timer.periodic(const Duration(seconds: 1), (timer) async {
+    if (service is AndroidServiceInstance) {
+      if (await service.isForegroundService()) {
+        // Servizio attivo
+      }
+    }
+  });
+}
+
+// ==========================================
+// UI - PAGINA PRINCIPALE
+// ==========================================
 
 class DecibelMeterPage extends StatefulWidget {
   const DecibelMeterPage({super.key});
@@ -20,39 +157,72 @@ class DecibelMeterPage extends StatefulWidget {
 }
 
 class _DecibelMeterPageState extends State<DecibelMeterPage> {
-  NoiseMeter? _noiseMeter;
-  StreamSubscription<NoiseReading>? _noiseSubscription;
   late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
   
   double _currentDecibel = 0.0;
   double _maxDecibel = 0.0;
   double _minDecibel = 0.0;
   bool _isRecording = false;
+  bool _serviceInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    _noiseMeter = NoiseMeter();
+    
+    _initializeService();
+    
     flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
     var initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    var initializationSettingsIOS = DarwinInitializationSettings(
-      requestAlertPermission: true, // Richiedi il permesso per gli alert
-      requestBadgePermission: true, // Richiedi il permesso per il badge dell'app
-      requestSoundPermission: true, // Richiedi il permesso per il suono
+        const AndroidInitializationSettings('@mipmap/ic_launcher');
+    var initializationSettingsIOS = const DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
     );
     var initializationSettings = InitializationSettings(
         android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
     flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+    // Ascolta gli aggiornamenti dal servizio background
+    FlutterBackgroundService().on('update').listen((event) {
+      if (event != null && mounted) {
+        setState(() {
+          _currentDecibel = event['current'] ?? 0.0;
+          _maxDecibel = event['max'] ?? 0.0;
+          _minDecibel = event['min'] ?? 0.0;
+        });
+      }
+    });
+
+    // Ascolta gli errori dal servizio background
+    FlutterBackgroundService().on('error').listen((event) {
+      if (event != null && mounted) {
+        _showErrorDialog(event['message'] ?? 'Errore sconosciuto');
+        _stopRecording();
+      }
+    });
+  }
+
+  Future<void> _initializeService() async {
+    try {
+      await initializeDecibelService();
+      setState(() {
+        _serviceInitialized = true;
+      });
+    } catch (e) {
+      print('Errore inizializzazione servizio: $e');
+      _showErrorDialog('Errore inizializzazione: $e');
+    }
   }
 
   @override
   void dispose() {
-    _noiseSubscription?.cancel();
+    if (_isRecording) {
+      FlutterBackgroundService().invoke('stopService');
+    }
     super.dispose();
   }
 
-  /// Mostra un dialogo con il messaggio appropriato per il permesso
   void _showPermissionDialog(PermissionResult result) {
     final message = PermissionHandlerUtility.getPermissionMessage(result);
     final isPermanentlyDenied = result == PermissionResult.permanentlyDenied;
@@ -80,31 +250,21 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
     );
   }
 
-  void _startRecording() {
-    try {
-      _noiseSubscription = _noiseMeter?.noise.listen(
-        (NoiseReading reading) {
-          setState(() {
-            _currentDecibel = reading.meanDecibel;
-            
-            if (_maxDecibel == 0.0 || _currentDecibel > _maxDecibel) {
-              _maxDecibel = _currentDecibel;
-            }
-            
-            if (_minDecibel == 0.0 || _currentDecibel < _minDecibel) {
-              _minDecibel = _currentDecibel;
-            }
+  Future<void> _startRecording() async {
+    if (!_serviceInitialized) {
+      _showErrorDialog('Servizio non inizializzato. Riprova tra poco.');
+      return;
+    }
 
-            if (_currentDecibel >= 50) {
-              showSimpleNotification(flutterLocalNotificationsPlugin);
-            }
-          });
-        },
-        onError: (error) {
-          _stopRecording();
-          _showErrorDialog('Errore nella lettura del microfono: $error');
-        },
-      );
+    try {
+      final isRunning = await FlutterBackgroundService().isRunning();
+      
+      if (!isRunning) {
+        await FlutterBackgroundService().startService();
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+      
+      FlutterBackgroundService().invoke('startMeasuring');
       
       setState(() {
         _isRecording = true;
@@ -112,40 +272,40 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
         _minDecibel = 0.0;
       });
     } catch (e) {
-      _showErrorDialog('Errore: $e');
+      print('Errore avvio recording: $e');
+      _showErrorDialog('Errore avvio: $e');
     }
   }
 
   void _stopRecording() {
-    _noiseSubscription?.cancel();
+    FlutterBackgroundService().invoke('stopService');
+    
     setState(() {
       _isRecording = false;
       _currentDecibel = 0.0;
     });
   }
 
-  void _toggleRecording() async {
+  Future<void> _toggleRecording() async {
     if (_isRecording) {
       _stopRecording();
     } else {
-      // Prima richiedi il permesso del microfono
       final micResult = await PermissionHandlerUtility.requestPermission(Permission.microphone);
       
       if (micResult != PermissionResult.granted) {
         _showPermissionDialog(micResult);
-        return; // Esci se il permesso non è concesso
+        return;
       }
       
-      // Poi richiedi il permesso delle notifiche
       await PermissionHandlerUtility.requestPermission(Permission.notification);
       
-      // Infine avvia la registrazione
-      _startRecording();
+      await _startRecording();
     }
   }
 
-  /// Mostra un dialogo per errori generici
   void _showErrorDialog(String message) {
+    if (!mounted) return;
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -174,10 +334,37 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              DecibelDisplay(
-                    currentDecibel: _currentDecibel,
-                    isRecording: _isRecording,
+              Container(
+                width: 250,
+                height: 250,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: db_colors.getDecibelColor(_currentDecibel).withOpacity(0.2),
+                  border: Border.all(
+                    color: db_colors.getDecibelColor(_currentDecibel),
+                    width: 4,
+                  ),
                 ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _isRecording ? _currentDecibel.toStringAsFixed(1) : '0.0',
+                      style: TextStyle(
+                        fontSize: 60,
+                        color: db_colors.getDecibelColor(_currentDecibel),
+                      ),
+                    ),
+                    const Text(
+                      'dB',
+                      style: TextStyle(
+                        fontSize: 24,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 20),
               Text(
                 db_colors.getNoiseLevel(_currentDecibel),
@@ -186,7 +373,22 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 10),
+              if (_isRecording)
+                const Text(
+                  'In esecuzione in background',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              if (!_serviceInitialized)
+                const Text(
+                  'Inizializzazione servizio...',
+                  style: TextStyle(fontSize: 12, color: Colors.orange),
+                ),
+              const SizedBox(height: 30),
               if (_isRecording) ...[
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -198,7 +400,7 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
                 const SizedBox(height: 30),
               ],
               ElevatedButton.icon(
-                onPressed: _toggleRecording,
+                onPressed: _serviceInitialized ? _toggleRecording : null,
                 icon: Icon(_isRecording ? Icons.stop : Icons.mic),
                 label: Text(_isRecording ? 'Ferma' : 'Inizia Misurazione'),
                 style: ElevatedButton.styleFrom(

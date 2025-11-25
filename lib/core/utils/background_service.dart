@@ -1,5 +1,6 @@
-/* 
-import 'dart:async';
+/* import 'dart:async';
+import 'dart:ui';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 
 Future<void> initializeService() async {
@@ -20,5 +21,13 @@ Future<void> initializeService() async {
 
 @pragma('vm:entry-point')
 void onStart(ServiceInstance service) async {
-  
+  DartPluginRegistrant.ensureInitialized();
+  if(service is AndroidServiceInstance) {
+    service.on('setAsForeground').listen((event) {
+      service.setAsBackgroundService();
+    });
+    service.on('setAsBackground').listen((event) {
+      service.setAsBackgroundService();
+    });
+  }
 } */
