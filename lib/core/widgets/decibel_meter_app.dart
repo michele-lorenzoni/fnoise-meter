@@ -15,6 +15,7 @@ class DecibelMeterApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const dmp.DecibelMeterPage(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }

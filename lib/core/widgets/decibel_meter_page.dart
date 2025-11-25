@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:noise_meter/noise_meter.dart';
 import 'dart:async';
 
 import 'package:fnoise_meter/core/utils/decibel_colors.dart' as db_colors;
 import 'package:fnoise_meter/core/utils/permission_handler_utility.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:fnoise_meter/core/utils/notification_service.dart';
+import 'package:fnoise_meter/core/widgets/status_card.dart';
+
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:noise_meter/noise_meter.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class DecibelMeterPage extends StatefulWidget {
   const DecibelMeterPage({super.key});
@@ -116,6 +118,7 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
     _noiseSubscription?.cancel();
     setState(() {
       _isRecording = false;
+      _currentDecibel = 0.0;
     });
   }
 
@@ -155,7 +158,7 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
       ),
     );
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -184,7 +187,7 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      _currentDecibel.toStringAsFixed(1),
+                      _isRecording ? _currentDecibel.toStringAsFixed(1) : '0.0',
                       style: TextStyle(
                         fontSize: 60,
                         color: db_colors.getDecibelColor(_currentDecibel),
@@ -213,8 +216,8 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildStatCard('Minimo', _minDecibel, Colors.blue),
-                    _buildStatCard('Massimo', _maxDecibel, Colors.red),
+                    buildStatCard('Minimo', _minDecibel, Colors.blue),
+                    buildStatCard('Massimo', _maxDecibel, Colors.red),
                   ],
                 ),
                 const SizedBox(height: 30),
@@ -233,35 +236,6 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatCard(String label, double value, Color color) {
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '${value.toStringAsFixed(1)} dB',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-          ],
         ),
       ),
     );
