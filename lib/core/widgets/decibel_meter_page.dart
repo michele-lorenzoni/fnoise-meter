@@ -47,32 +47,6 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
     super.dispose();
   }
 
-  /// Richiede il permesso e gestisce il risultato
-/*   Future<void> _requestMyMicrophonePermission() async {
-    final result = await PermissionHandlerUtility.requestMicrophonePermission(Permission.microphone);
-    
-    if (result == PermissionResult.granted) {
-      _startRecording();
-    } else {
-      _showPermissionDialog(result);
-    }
-  } */
-
-  Future<void> _requestMyNotificationPermission() async {
-    final bool? granted = await flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.requestNotificationsPermission();
-
-    if(granted != null && granted) {
-      print('Permesso notifica concesso!');
-      // Puoi fare qualcosa se il permesso è concesso
-    } else {
-      print('Permesso notifica negato o non richiesto.');
-      // Puoi mostrare un messaggio all'utente
-    }
-  }
-
   /// Mostra un dialogo con il messaggio appropriato per il permesso
   void _showPermissionDialog(PermissionResult result) {
     final message = PermissionHandlerUtility.getPermissionMessage(result);
@@ -149,7 +123,7 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
       _stopRecording();
     } else {
       // Prima richiedi il permesso del microfono
-      final micResult = await PermissionHandlerUtility.requestMicrophonePermission(Permission.microphone);
+      final micResult = await PermissionHandlerUtility.requestPermission(Permission.microphone);
       
       if (micResult != PermissionResult.granted) {
         _showPermissionDialog(micResult);
@@ -157,7 +131,7 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
       }
       
       // Poi richiedi il permesso delle notifiche
-      await _requestMyNotificationPermission();
+      await PermissionHandlerUtility.requestPermission(Permission.notification);
       
       // Infine avvia la registrazione
       _startRecording();
