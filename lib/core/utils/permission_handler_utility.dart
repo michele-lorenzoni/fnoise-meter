@@ -4,9 +4,11 @@ import 'package:permission_handler/permission_handler.dart';
 class PermissionHandlerUtility {
   /// Richiede il permesso del microfono
   /// Restituisce true se il permesso è stato concesso, false altrimenti
-  static Future<PermissionResult> requestPermission(Permission permissionType) async {
+  static Future<PermissionResult> requestPermission(
+    Permission permissionType,
+  ) async {
     final status = await permissionType.request();
-    
+
     if (status.isGranted) {
       return PermissionResult.granted;
     } else if (status.isDenied) {
@@ -14,7 +16,7 @@ class PermissionHandlerUtility {
     } else if (status.isPermanentlyDenied) {
       return PermissionResult.permanentlyDenied;
     }
-    
+
     return PermissionResult.denied;
   }
 
@@ -23,12 +25,12 @@ class PermissionHandlerUtility {
     final status = await permissionType.status;
     return status.isGranted;
   }
-  
+
   /// Apre le impostazioni dell'app
   static Future<void> openSettings() async {
     await openAppSettings();
   }
-  
+
   /// Ottiene il messaggio da mostrare all'utente in base allo stato del permesso
   static String getPermissionMessage(PermissionResult result) {
     switch (result) {
@@ -43,8 +45,4 @@ class PermissionHandlerUtility {
 }
 
 /// Enum per rappresentare il risultato della richiesta di permesso
-enum PermissionResult {
-  granted,
-  denied,
-  permanentlyDenied,
-}
+enum PermissionResult { granted, denied, permanentlyDenied }

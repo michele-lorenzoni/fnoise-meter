@@ -31,7 +31,8 @@ Future<void> initializeDecibelService() async {
 
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
+        AndroidFlutterLocalNotificationsPlugin
+      >()
       ?.createNotificationChannel(channel);
 
   await service.configure(
@@ -79,7 +80,8 @@ void onStartDecibelService(ServiceInstance service) async {
 
   NoiseMeter? noiseMeter;
   StreamSubscription<NoiseReading>? noiseSubscription;
-  
+  Timer? keepAliveTimer;
+
   double currentDecibel = 0.0;
   double maxDecibel = 0.0;
   double minDecibel = 0.0;
@@ -88,6 +90,10 @@ void onStartDecibelService(ServiceInstance service) async {
   service.on('stopService').listen((event) {
     noiseSubscription?.cancel();
     noiseSubscription = null;
+
+    keepAliveTimer?.cancel();
+    keepAliveTimer = null;
+
     noiseMeter = null;
     service.stopSelf();
   });
@@ -96,15 +102,15 @@ void onStartDecibelService(ServiceInstance service) async {
   service.on('startMeasuring').listen((event) async {
     try {
       noiseMeter = NoiseMeter();
-      
+
       noiseSubscription = noiseMeter?.noise.listen(
         (NoiseReading reading) {
           currentDecibel = reading.meanDecibel;
-          
+
           if (maxDecibel == 0.0 || currentDecibel > maxDecibel) {
             maxDecibel = currentDecibel;
           }
-          
+
           if (minDecibel == 0.0 || currentDecibel < minDecibel) {
             minDecibel = currentDecibel;
           }
@@ -136,7 +142,7 @@ void onStartDecibelService(ServiceInstance service) async {
   });
 
   // Timer per mantenere il servizio attivo
-  Timer.periodic(const Duration(seconds: 1), (timer) async {
+  keepAliveTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
     if (service is AndroidServiceInstance) {
       if (await service.isForegroundService()) {
         // Servizio attivo
@@ -158,7 +164,7 @@ class DecibelMeterPage extends StatefulWidget {
 
 class _DecibelMeterPageState extends State<DecibelMeterPage> {
   late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
-  
+
   double _currentDecibel = 0.0;
   double _maxDecibel = 0.0;
   double _minDecibel = 0.0;
@@ -168,19 +174,22 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
   @override
   void initState() {
     super.initState();
-    
+
     _initializeService();
-    
+
     flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-    var initializationSettingsAndroid =
-        const AndroidInitializationSettings('@mipmap/ic_launcher');
+    var initializationSettingsAndroid = const AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     var initializationSettingsIOS = const DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
     );
     var initializationSettings = InitializationSettings(
-        android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
+    );
     flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
     // Ascolta gli aggiornamenti dal servizio background
@@ -226,7 +235,7 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
   void _showPermissionDialog(PermissionResult result) {
     final message = PermissionHandlerUtility.getPermissionMessage(result);
     final isPermanentlyDenied = result == PermissionResult.permanentlyDenied;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -258,14 +267,14 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
 
     try {
       final isRunning = await FlutterBackgroundService().isRunning();
-      
+
       if (!isRunning) {
         await FlutterBackgroundService().startService();
         await Future.delayed(const Duration(milliseconds: 500));
       }
-      
+
       FlutterBackgroundService().invoke('startMeasuring');
-      
+
       setState(() {
         _isRecording = true;
         _maxDecibel = 0.0;
@@ -279,7 +288,7 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
 
   void _stopRecording() {
     FlutterBackgroundService().invoke('stopService');
-    
+
     setState(() {
       _isRecording = false;
       _currentDecibel = 0.0;
@@ -290,22 +299,24 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
     if (_isRecording) {
       _stopRecording();
     } else {
-      final micResult = await PermissionHandlerUtility.requestPermission(Permission.microphone);
-      
+      final micResult = await PermissionHandlerUtility.requestPermission(
+        Permission.microphone,
+      );
+
       if (micResult != PermissionResult.granted) {
         _showPermissionDialog(micResult);
         return;
       }
-      
+
       await PermissionHandlerUtility.requestPermission(Permission.notification);
-      
+
       await _startRecording();
     }
   }
 
   void _showErrorDialog(String message) {
     if (!mounted) return;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -334,7 +345,7 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              DecibelDisplay( // <--- QUI SOSTITUISCI IL VECCHIO CONTAINER
+              DecibelDisplay(
                 currentDecibel: _currentDecibel,
                 isRecording: _isRecording,
               ),
@@ -384,11 +395,11 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
                   ),
                   foregroundColor: const Color(0xFF7B1FA2),
                   textStyle: const TextStyle(fontSize: 18),
-                  shape: const RoundedRectangleBorder( 
+                  shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.zero,
                   ),
                 ),
-              )
+              ),
             ],
           ),
         ),

@@ -42,12 +42,7 @@ class DecibelDisplay extends StatelessWidget {
                 //color: db_colors.getDecibelColor(currentDecibel),
               ),
             ),
-            const Text(
-              'dB',
-              style: TextStyle(
-                fontSize: 24,
-              ),
-            ),
+            const Text('dB', style: TextStyle(fontSize: 24)),
           ],
         ),
       ),

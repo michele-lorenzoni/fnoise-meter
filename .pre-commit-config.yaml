@@ -1,0 +1,31 @@
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/google/pre-commit-tool-hooks
+    rev: v1.2.5
+    hooks:
+      - id: check-google-doc-style
+
+  # Hook generici per Dart
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+
+  # Hook locale per Dart/Flutter
+  - repo: local
+    hooks:
+      - id: dart-format
+        name: dart format
+        entry: dart format
+        language: system
+        files: \.dart$
+
+      - id: dart-analyze
+        name: dart analyze
+        entry: dart analyze
+        language: system
+        pass_filenames: false
