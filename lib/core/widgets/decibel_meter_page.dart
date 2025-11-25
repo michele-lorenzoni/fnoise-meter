@@ -4,7 +4,9 @@ import 'dart:async';
 import 'package:fnoise_meter/core/utils/decibel_colors.dart' as db_colors;
 import 'package:fnoise_meter/core/utils/permission_handler_utility.dart';
 import 'package:fnoise_meter/core/utils/notification_service.dart';
+
 import 'package:fnoise_meter/core/widgets/status_card.dart';
+import 'package:fnoise_meter/core/widgets/decibel_display.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:noise_meter/noise_meter.dart';
@@ -172,37 +174,10 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 250,
-                height: 250,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: db_colors.getDecibelColor(_currentDecibel).withOpacity(0.2),
-                  border: Border.all(
-                    color: db_colors.getDecibelColor(_currentDecibel),
-                    width: 4,
-                  ),
+              DecibelDisplay(
+                    currentDecibel: _currentDecibel,
+                    isRecording: _isRecording,
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      _isRecording ? _currentDecibel.toStringAsFixed(1) : '0.0',
-                      style: TextStyle(
-                        fontSize: 60,
-                        color: db_colors.getDecibelColor(_currentDecibel),
-                      ),
-                    ),
-                    const Text(
-                      'dB',
-                      style: TextStyle(
-                        fontSize: 24,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               const SizedBox(height: 20),
               Text(
                 db_colors.getNoiseLevel(_currentDecibel),
