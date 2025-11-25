@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:fnoise_meter/core/utils/decibel_colors.dart' as db_colors;
 import 'package:fnoise_meter/core/utils/permission_handler_utility.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class DecibelMeterPage extends StatefulWidget {
   const DecibelMeterPage({super.key});
@@ -15,6 +16,7 @@ class DecibelMeterPage extends StatefulWidget {
 class _DecibelMeterPageState extends State<DecibelMeterPage> {
   NoiseMeter? _noiseMeter;
   StreamSubscription<NoiseReading>? _noiseSubscription;
+  late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
   
   double _currentDecibel = 0.0;
   double _maxDecibel = 0.0;
@@ -25,6 +27,17 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
   void initState() {
     super.initState();
     _noiseMeter = NoiseMeter();
+    flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+    var initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    var initializationSettingsIOS = DarwinInitializationSettings(
+      requestAlertPermission: true, // Richiedi il permesso per gli alert
+      requestBadgePermission: true, // Richiedi il permesso per il badge dell'app
+      requestSoundPermission: true, // Richiedi il permesso per il suono
+    );
+    var initializationSettings = InitializationSettings(
+        android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
+    flutterLocalNotificationsPlugin.initialize(initializationSettings);
   }
 
   @override
@@ -34,7 +47,7 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
   }
 
   /// Richiede il permesso e gestisce il risultato
-  Future<void> _requestPermission() async {
+  Future<void> _requestMyMicrophonePermission() async {
     final result = await PermissionHandlerUtility.requestMicrophonePermission();
     
     if (result == PermissionResult.granted) {
@@ -42,6 +55,21 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
     } else {
       _showPermissionDialog(result);
     }
+  }
+
+  Future<void> _requestMyNotificationPermission() async {
+    final bool? granted = await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.requestNotificationsPermission();
+
+ /* if(granted != null && granted) {
+      print('Permesso notifica concesso!');
+      // Puoi fare qualcosa se il permesso è concesso
+    } else {
+      print('Permesso notifica negato o non richiesto.');
+      // Puoi mostrare un messaggio all'utente
+    } */
   }
 
   /// Mostra un dialogo con il messaggio appropriato per il permesso
@@ -112,10 +140,12 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
   }
 
   void _toggleRecording() async {
+    await showSimpleNotification();
     if (_isRecording) {
       _stopRecording();
     } else {
-      await _requestPermission();
+      await _requestMyMicrophonePermission();
+      await _requestMyNotificationPermission();
     }
   }
 
@@ -133,6 +163,25 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> showSimpleNotification() async {
+    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+      'your_channel_id', // 1. ID del canale
+      'your_channel_name', // 2. Nome del canale
+      importance: Importance.max,
+      priority: Priority.high,
+      ticker: 'ticker',
+    );
+    var iOSPlatformChannelSpecifics = DarwinNotificationDetails();
+    var platformChannelSpecifics = NotificationDetails(
+        android: androidPlatformChannelSpecifics, iOS: iOSPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      'Hello!',
+      'This is a simple notification.',
+      platformChannelSpecifics,
     );
   }
 
