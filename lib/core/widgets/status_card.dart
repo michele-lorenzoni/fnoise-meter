@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 
 Widget buildStatCard(String label, double value, Color color) {
     return Card(
-      elevation: 4,
+      elevation: 2,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.zero,
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

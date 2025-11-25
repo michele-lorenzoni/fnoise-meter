@@ -352,22 +352,22 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
                   'In esecuzione in background',
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.red,
+                    color: Colors.grey,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               if (!_serviceInitialized)
                 const Text(
                   'Inizializzazione servizio...',
-                  style: TextStyle(fontSize: 12, color: Colors.orange),
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               const SizedBox(height: 30),
               if (_isRecording) ...[
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    buildStatCard('Minimo', _minDecibel, Colors.blue),
-                    buildStatCard('Massimo', _maxDecibel, Colors.red),
+                    buildStatCard('Minimo', _minDecibel, Color(0xFF388E3C)),
+                    buildStatCard('Massimo', _maxDecibel, Color(0xFFE64A19)),
                   ],
                 ),
                 const SizedBox(height: 30),
@@ -377,13 +377,18 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
                 icon: Icon(_isRecording ? Icons.stop : Icons.mic),
                 label: Text(_isRecording ? 'Ferma' : 'Inizia Misurazione'),
                 style: ElevatedButton.styleFrom(
+                  elevation: 2,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 30,
                     vertical: 15,
                   ),
+                  foregroundColor: const Color(0xFF7B1FA2),
                   textStyle: const TextStyle(fontSize: 18),
+                  shape: const RoundedRectangleBorder( 
+                    borderRadius: BorderRadius.zero,
+                  ),
                 ),
-              ),
+              )
             ],
           ),
         ),

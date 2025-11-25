@@ -15,37 +15,41 @@ class DecibelDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 3. Ritorna il tuo Container
-    return Container(
-      width: 250,
-      height: 250,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        // Usa le variabili del widget al posto delle variabili con '_'
-        color: db_colors.getDecibelColor(currentDecibel).withOpacity(0.2),
-        border: Border.all(
-          color: db_colors.getDecibelColor(currentDecibel),
-          width: 4,
+    return Material(
+      elevation: 2,
+      borderRadius: BorderRadius.circular(125),
+      clipBehavior: Clip.antiAlias,
+      child: Container(
+        width: 250,
+        height: 250,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          // ... Altre proprietà di BoxDecoration
+          color: db_colors.getDecibelColor(currentDecibel).withOpacity(0.2),
+          border: Border.all(
+            color: db_colors.getDecibelColor(currentDecibel),
+            width: 4,
+          ),
         ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            isRecording ? currentDecibel.toStringAsFixed(1) : '0.0',
-            style: TextStyle(
-              fontSize: 60,
-              color: db_colors.getDecibelColor(currentDecibel),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // ... Contenuto interno
+            Text(
+              isRecording ? currentDecibel.toStringAsFixed(1) : '0.0',
+              style: TextStyle(
+                fontSize: 60,
+                //color: db_colors.getDecibelColor(currentDecibel),
+              ),
             ),
-          ),
-          const Text(
-            'dB',
-            style: TextStyle(
-              fontSize: 24,
-              color: Colors.grey,
+            const Text(
+              'dB',
+              style: TextStyle(
+                fontSize: 24,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
