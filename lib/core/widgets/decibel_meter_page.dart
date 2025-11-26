@@ -7,6 +7,7 @@ import 'package:fnoise_meter/core/utils/permission_handler_utility.dart';
 import 'package:fnoise_meter/core/widgets/status_card.dart';
 import 'package:fnoise_meter/core/widgets/decibel_display.dart';
 import 'package:fnoise_meter/core/widgets/recording_button.dart';
+import 'package:fnoise_meter/core/widgets/dialogs/error_dialog.dart';
 
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -205,7 +206,7 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
     // Ascolta gli errori dal servizio background
     FlutterBackgroundService().on('error').listen((event) {
       if (event != null && mounted) {
-        _showErrorDialog(event['message'] ?? 'Errore sconosciuto');
+        showErrorDialog(event['message'] ?? 'Errore sconosciuto');
         _stopRecording();
       }
     });
@@ -218,8 +219,7 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
         _serviceInitialized = true;
       });
     } catch (e) {
-      print('Errore inizializzazione servizio: $e');
-      _showErrorDialog('Errore inizializzazione: $e');
+      showErrorDialog('Errore inizializzazione: $e');
     }
   }
 
@@ -260,7 +260,7 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
 
   Future<void> _startRecording() async {
     if (!_serviceInitialized) {
-      _showErrorDialog('Servizio non inizializzato. Riprova tra poco.');
+      showErrorDialog('Servizio non inizializzato. Riprova tra poco.');
       return;
     }
 
@@ -280,7 +280,7 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
         _minDecibel = 0.0;
       });
     } catch (e) {
-      _showErrorDialog('Errore avvio: $e');
+      showErrorDialog('Errore avvio: $e');
     }
   }
 
@@ -312,22 +312,9 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
     }
   }
 
-  void _showErrorDialog(String message) {
-    if (!mounted) return;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Errore'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
+  void showErrorDialog(String message) {
+    if (!mounted) return; // ✅ Controlli qui
+    ErrorDialog.show(context, message);
   }
 
   @override
