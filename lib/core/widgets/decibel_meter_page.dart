@@ -206,7 +206,7 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
     // Ascolta gli errori dal servizio background
     FlutterBackgroundService().on('error').listen((event) {
       if (event != null && mounted) {
-        showErrorDialog(event['message'] ?? 'Errore sconosciuto');
+        ErrorDialog.show(context, (event['message'] ?? 'Errore sconosciuto'));
         _stopRecording();
       }
     });
@@ -215,11 +215,13 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
   Future<void> _initializeService() async {
     try {
       await initializeDecibelService();
+      if (!mounted) return;
       setState(() {
         _serviceInitialized = true;
       });
     } catch (e) {
-      showErrorDialog('Errore inizializzazione: $e');
+      if (!mounted) return;
+      ErrorDialog.show(context, ('Errore inizializzazione: $e'));
     }
   }
 
@@ -260,7 +262,8 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
 
   Future<void> _startRecording() async {
     if (!_serviceInitialized) {
-      showErrorDialog('Servizio non inizializzato. Riprova tra poco.');
+      const message = 'Servizio non inizializzato. Riprova tra poco.';
+      ErrorDialog.show(context, message);
       return;
     }
 
@@ -280,7 +283,8 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
         _minDecibel = 0.0;
       });
     } catch (e) {
-      showErrorDialog('Errore avvio: $e');
+      if (!mounted) return;
+      ErrorDialog.show(context, 'Errore avvio: $e');
     }
   }
 
@@ -310,11 +314,6 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
 
       await _startRecording();
     }
-  }
-
-  void showErrorDialog(String message) {
-    if (!mounted) return; // ✅ Controlli qui
-    ErrorDialog.show(context, message);
   }
 
   @override
