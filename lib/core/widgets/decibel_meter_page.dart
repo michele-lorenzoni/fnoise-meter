@@ -333,10 +333,6 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Misuratore Decibel'),
-        centerTitle: true,
-      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(20.0),

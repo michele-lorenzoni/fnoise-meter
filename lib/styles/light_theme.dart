@@ -11,7 +11,7 @@ final ThemeData lightTheme = ThemeData(
     backgroundColor: Colors.blue,
     foregroundColor: Colors.white,
     centerTitle: true,
-    elevation: 4, // Ombra
+    elevation: 4,
   ),
 
   // Personalizzazione specifica per gli ElevatedButton
