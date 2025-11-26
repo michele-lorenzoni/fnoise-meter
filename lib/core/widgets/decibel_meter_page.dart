@@ -280,7 +280,6 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
         _minDecibel = 0.0;
       });
     } catch (e) {
-      print('Errore avvio recording: $e');
       _showErrorDialog('Errore avvio: $e');
     }
   }
