@@ -1,5 +1,5 @@
 
-![Logo](https://github.com/michele-lorenzoni/fnoise-meter/blob/main/assets/images/acme.png?raw=true)
+![Logo](https://github.com/realvjy/uilogos.co/blob/5a7006bb81e50cb511f337ff18633e82f9402c6c/public/logos/type/acme.svg?raw=true)
 
 
 # fnoise-meter
