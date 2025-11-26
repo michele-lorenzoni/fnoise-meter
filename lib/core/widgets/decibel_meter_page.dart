@@ -8,6 +8,7 @@ import 'package:fnoise_meter/core/widgets/status_card.dart';
 import 'package:fnoise_meter/core/widgets/decibel_display.dart';
 import 'package:fnoise_meter/core/widgets/recording_button.dart';
 import 'package:fnoise_meter/core/widgets/dialogs/error_dialog.dart';
+import 'package:fnoise_meter/core/widgets/dialogs/permission_dialog.dart';
 
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -237,27 +238,7 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
     final message = PermissionHandlerUtility.getPermissionMessage(result);
     final isPermanentlyDenied = result == PermissionResult.permanentlyDenied;
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Permesso Microfono'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-          if (isPermanentlyDenied)
-            TextButton(
-              onPressed: () {
-                PermissionHandlerUtility.openSettings();
-                Navigator.pop(context);
-              },
-              child: const Text('Impostazioni'),
-            ),
-        ],
-      ),
-    );
+    PermissionDialog.show(context, message, isPermanentlyDenied);
   }
 
   Future<void> _startRecording() async {
