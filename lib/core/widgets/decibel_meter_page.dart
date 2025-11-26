@@ -6,6 +6,7 @@ import 'package:fnoise_meter/core/utils/decibel_colors.dart' as db_colors;
 import 'package:fnoise_meter/core/utils/permission_handler_utility.dart';
 import 'package:fnoise_meter/core/widgets/status_card.dart';
 import 'package:fnoise_meter/core/widgets/decibel_display.dart';
+import 'package:fnoise_meter/core/widgets/recording_button.dart';
 
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -383,22 +384,10 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
                 ),
                 const SizedBox(height: 30),
               ],
-              ElevatedButton.icon(
-                onPressed: _serviceInitialized ? _toggleRecording : null,
-                icon: Icon(_isRecording ? Icons.stop : Icons.mic),
-                label: Text(_isRecording ? 'Ferma' : 'Inizia Misurazione'),
-                style: ElevatedButton.styleFrom(
-                  elevation: 2,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 30,
-                    vertical: 15,
-                  ),
-                  foregroundColor: const Color(0xFF7B1FA2),
-                  textStyle: const TextStyle(fontSize: 18),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.zero,
-                  ),
-                ),
+              RecordingButton(
+                isRecording: _isRecording,
+                serviceInitialized: _serviceInitialized,
+                onPressed: _toggleRecording,
               ),
             ],
           ),

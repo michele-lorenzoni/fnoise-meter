@@ -8,10 +8,10 @@ class DecibelDisplay extends StatelessWidget {
 
   // 2. Definisci il costruttore per richiedere i dati
   const DecibelDisplay({
-    Key? key,
+    super.key,
     required this.currentDecibel,
     required this.isRecording,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
