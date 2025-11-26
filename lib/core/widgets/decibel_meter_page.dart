@@ -132,12 +132,10 @@ void onStartDecibelService(ServiceInstance service) async {
           });
         },
         onError: (error) {
-          print('Errore noise meter: $error');
           service.invoke('error', {'message': error.toString()});
         },
       );
     } catch (e) {
-      print('Errore avvio misurazione: $e');
       service.invoke('error', {'message': e.toString()});
     }
   });
