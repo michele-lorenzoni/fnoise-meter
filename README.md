@@ -1,16 +1,32 @@
+
+![Logo](https://github.com/michele-lorenzoni/fnoise-meter/blob/main/assets/images/acme.png?raw=true)
+
+
 # fnoise-meter
 
-A new Flutter project.
+An application made in Flutter/Dart to measure the decibels of a sound or noise in real time.
 
-## Getting Started
 
-This project is a starting point for a Flutter application.
+## Installation
 
-A few resources to get you started if this is your first Flutter project:
+for Linux:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+```bash
+  git clone https://github.com/michele-lorenzoni/fnoise-meter.git
+  cd fnoise-meter
+  python3 -m venv venv
+  source venv/bin/activate
+  pip install -r requirements.txt
+  pre-commit install
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+for Windows:
+
+```bash
+  git clone https://github.com/michele-lorenzoni/fnoise-meter.git
+  cd fnoise-meter
+  python3 -m venv venv
+  venv\Scripts\activate.bat
+  pip install -r requirements.txt
+  pre-commit install
+```
