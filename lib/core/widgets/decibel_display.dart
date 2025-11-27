@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fnoise_meter/core/utils/decibel_colors.dart' as db_colors;
+import 'package:fnoise_meter/core/utils/decibel_colors.dart';
 
 class DecibelDisplay extends StatelessWidget {
   // 1. Definisci i campi che riceveranno i dati esterni
@@ -25,11 +25,8 @@ class DecibelDisplay extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           // ... Altre proprietà di BoxDecoration
-          color: db_colors.getDecibelColor(currentDecibel).withOpacity(0.2),
-          border: Border.all(
-            color: db_colors.getDecibelColor(currentDecibel),
-            width: 4,
-          ),
+          color: getDecibelColor(currentDecibel).withOpacity(0.2),
+          border: Border.all(color: getDecibelColor(currentDecibel), width: 4),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

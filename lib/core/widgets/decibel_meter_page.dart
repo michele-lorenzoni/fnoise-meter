@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:ui';
 
-import 'package:fnoise_meter/core/utils/decibel_colors.dart' as db_colors;
+import 'package:fnoise_meter/core/utils/decibel_colors.dart';
 import 'package:fnoise_meter/core/utils/permission_handler_utility.dart';
 import 'package:fnoise_meter/core/widgets/status_card.dart';
 import 'package:fnoise_meter/core/widgets/decibel_display.dart';
@@ -312,7 +312,7 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
               ),
               const SizedBox(height: 20),
               Text(
-                db_colors.getNoiseLevel(_currentDecibel),
+                getNoiseLevel(_currentDecibel),
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w500,
