@@ -244,9 +244,15 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
       }
 
       FlutterBackgroundService().invoke('startMeasuring');
-      // ... resto del codice
+
+      setState(() {
+        _isRecording = true;
+        _maxDecibel = 0.0;
+        _minDecibel = 0.0;
+      });
     } catch (e) {
-      // gestione errore
+      if (!mounted) return;
+      ErrorDialog.show(context, 'Errore avvio: $e');
     }
   }
 
