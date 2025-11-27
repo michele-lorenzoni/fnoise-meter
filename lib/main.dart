@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
 
-import 'package:fnoise_meter/core/widgets/decibel_meter_app.dart' as dma;
+import 'package:fnoise_meter/core/widgets/decibel_meter_app.dart';
 
 void main() {
   debugPaintSizeEnabled = true;
@@ -17,6 +17,6 @@ void main() {
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((
     _,
   ) {
-    runApp(const dma.DecibelMeterApp());
+    runApp(const DecibelMeterApp());
   });
 }

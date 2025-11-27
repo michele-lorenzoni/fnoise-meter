@@ -103,6 +103,17 @@ void onStartDecibelService(ServiceInstance service) async {
     service.invoke('error', {'message': error});
   };
 
+  // NUOVO: Rispondi alle richieste di stato
+  service.on('requestState').listen((event) {
+    final isRecording = decibelService.isListening;
+    service.invoke('stateResponse', {
+      'isRecording': isRecording,
+      'current': decibelService.currentDecibel,
+      'max': decibelService.maxDecibel,
+      'min': decibelService.minDecibel,
+    });
+  });
+
   // Ascolta il comando di stop
   service.on('stopService').listen((event) {
     decibelService.dispose();
@@ -182,6 +193,18 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
       }
     });
 
+    // NUOVO: Ascolta la risposta dello stato
+    FlutterBackgroundService().on('stateResponse').listen((event) {
+      if (event != null && mounted) {
+        setState(() {
+          _isRecording = event['isRecording'] ?? false;
+          _currentDecibel = event['current'] ?? 0.0;
+          _maxDecibel = event['max'] ?? 0.0;
+          _minDecibel = event['min'] ?? 0.0;
+        });
+      }
+    });
+
     // Ascolta gli errori dal servizio background
     FlutterBackgroundService().on('error').listen((event) {
       if (event != null && mounted) {
@@ -198,9 +221,25 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
       setState(() {
         _serviceInitialized = true;
       });
+
+      // NUOVO: Controlla se il servizio è già in esecuzione
+      await _checkServiceState();
     } catch (e) {
       if (!mounted) return;
       ErrorDialog.show(context, ('Errore inizializzazione: $e'));
+    }
+  }
+
+  // NUOVO: Metodo per verificare lo stato del servizio
+  Future<void> _checkServiceState() async {
+    final isRunning = await FlutterBackgroundService().isRunning();
+
+    if (isRunning) {
+      // Il servizio è attivo, richiedi lo stato
+      FlutterBackgroundService().invoke('requestState');
+
+      // Aspetta un momento per la risposta
+      await Future.delayed(const Duration(milliseconds: 500));
     }
   }
 
