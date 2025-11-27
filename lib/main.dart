@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
-//Import per l'uso di SystemChrome
+// Import per l'uso di SystemChrome
 import 'package:flutter/services.dart';
-import 'package:flutter/rendering.dart';
+// import 'package:flutter/rendering.dart';
 
 import 'package:fnoise_meter/core/widgets/decibel_meter_app.dart';
 
 void main() {
-  debugPaintSizeEnabled = true;
-  debugPaintBaselinesEnabled = true;
-  debugPaintPointersEnabled = true;
-  //Essendoci istruzioni prima della chiamata runApp() è necessario esplicitare ensureInitialized()
+  // debugPaintSizeEnabled = true;
+  // debugPaintBaselinesEnabled = true;
+  // debugPaintPointersEnabled = true;
+  // Essendoci istruzioni prima della chiamata runApp() è necessario esplicitare ensureInitialized()
   WidgetsFlutterBinding.ensureInitialized();
 
-  //Chiamata asincrona per forzare l'uso di portraitUp
-  //Essendo asincrona .then(_) aspetta la fine di DeviceOrientation per lanciare l'app
+  // Chiamata asincrona per forzare l'uso di portraitUp
+  // Essendo asincrona .then(_) aspetta la fine di DeviceOrientation per lanciare l'app
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((
     _,
   ) {

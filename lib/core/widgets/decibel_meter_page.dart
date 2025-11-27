@@ -301,6 +301,8 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
     setState(() {
       _isRecording = false;
       _currentDecibel = 0.0;
+      _maxDecibel = 0.0;
+      _minDecibel = 0.0;
     });
   }
 
@@ -333,12 +335,14 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               DecibelDisplay(
-                currentDecibel: _currentDecibel,
+                currentDecibel: _isRecording ? _currentDecibel : 0.0,
                 isRecording: _isRecording,
               ),
               const SizedBox(height: 20),
               Text(
-                getNoiseLevel(_currentDecibel),
+                _isRecording
+                    ? getNoiseLevel(_currentDecibel)
+                    : 'Molto silenzioso',
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w500,
