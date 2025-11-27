@@ -9,10 +9,10 @@ import 'package:fnoise_meter/core/widgets/decibel_display.dart';
 import 'package:fnoise_meter/core/widgets/recording_button.dart';
 import 'package:fnoise_meter/core/widgets/dialogs/error_dialog.dart';
 import 'package:fnoise_meter/core/widgets/dialogs/permission_dialog.dart';
+import 'package:fnoise_meter/core/utils/decibel_service.dart';
 
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:noise_meter/noise_meter.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 // ==========================================
@@ -81,62 +81,40 @@ void onStartDecibelService(ServiceInstance service) async {
     });
   }
 
-  NoiseMeter? noiseMeter;
-  StreamSubscription<NoiseReading>? noiseSubscription;
+  // Usa DecibelService invece di gestire manualmente
+  final decibelService = DecibelService();
   Timer? keepAliveTimer;
 
-  double currentDecibel = 0.0;
-  double maxDecibel = 0.0;
-  double minDecibel = 0.0;
+  // Configura i callback
+  decibelService.onUpdate = (current, max, min) {
+    // Aggiorna la notifica foreground
+    if (service is AndroidServiceInstance) {
+      service.setForegroundNotificationInfo(
+        title: "Misuratore Decibel",
+        content: "${current.toStringAsFixed(1)} dB",
+      );
+    }
+
+    // Invia dati all'UI
+    service.invoke('update', {'current': current, 'max': max, 'min': min});
+  };
+
+  decibelService.onError = (error) {
+    service.invoke('error', {'message': error});
+  };
 
   // Ascolta il comando di stop
   service.on('stopService').listen((event) {
-    noiseSubscription?.cancel();
-    noiseSubscription = null;
-
+    decibelService.dispose();
     keepAliveTimer?.cancel();
     keepAliveTimer = null;
-
-    noiseMeter = null;
     service.stopSelf();
   });
 
   // Ascolta il comando di start
   service.on('startMeasuring').listen((event) async {
     try {
-      noiseMeter = NoiseMeter();
-
-      noiseSubscription = noiseMeter?.noise.listen(
-        (NoiseReading reading) {
-          currentDecibel = reading.meanDecibel;
-
-          if (maxDecibel == 0.0 || currentDecibel > maxDecibel) {
-            maxDecibel = currentDecibel;
-          }
-
-          if (minDecibel == 0.0 || currentDecibel < minDecibel) {
-            minDecibel = currentDecibel;
-          }
-
-          // Aggiorna la notifica foreground
-          if (service is AndroidServiceInstance) {
-            service.setForegroundNotificationInfo(
-              title: "Misuratore Decibel",
-              content: "${currentDecibel.toStringAsFixed(1)} dB",
-            );
-          }
-
-          // Invia dati all'UI
-          service.invoke('update', {
-            'current': currentDecibel,
-            'max': maxDecibel,
-            'min': minDecibel,
-          });
-        },
-        onError: (error) {
-          service.invoke('error', {'message': error.toString()});
-        },
-      );
+      await decibelService.startMeasuring();
     } catch (e) {
       service.invoke('error', {'message': e.toString()});
     }
@@ -253,19 +231,22 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
 
       if (!isRunning) {
         await FlutterBackgroundService().startService();
-        await Future.delayed(const Duration(milliseconds: 500));
+
+        // Aspetta che il servizio sia effettivamente pronto
+        int attempts = 0;
+        while (attempts < 10) {
+          await Future.delayed(const Duration(milliseconds: 100));
+          if (await FlutterBackgroundService().isRunning()) {
+            break;
+          }
+          attempts++;
+        }
       }
 
       FlutterBackgroundService().invoke('startMeasuring');
-
-      setState(() {
-        _isRecording = true;
-        _maxDecibel = 0.0;
-        _minDecibel = 0.0;
-      });
+      // ... resto del codice
     } catch (e) {
-      if (!mounted) return;
-      ErrorDialog.show(context, 'Errore avvio: $e');
+      // gestione errore
     }
   }
 
