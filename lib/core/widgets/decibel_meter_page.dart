@@ -338,8 +338,16 @@ class _DecibelMeterPageState extends State<DecibelMeterPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    buildStatCard('Minimo', _minDecibel, Color(0xFF388E3C)),
-                    buildStatCard('Massimo', _maxDecibel, Color(0xFFE64A19)),
+                    StatCard(
+                      label: 'Minimo',
+                      value: _minDecibel,
+                      color: Color(0xFF388E3C),
+                    ),
+                    StatCard(
+                      label: 'Massimo',
+                      value: _maxDecibel,
+                      color: Color(0xFFE64A19),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 30),
