@@ -14,13 +14,28 @@ for Linux:
 ```bash
   git clone https://github.com/michele-lorenzoni/fnoise-meter.git
   cd fnoise-meter
+  flutter pub get
+```
+
+for Windows:
+
+```bash
+  git clone https://github.com/michele-lorenzoni/fnoise-meter.git
+  cd fnoise-meter
+  flutter pub get
+```
+Development for Linux:
+
+```bash
+  git clone https://github.com/michele-lorenzoni/fnoise-meter.git
+  cd fnoise-meter
   python3 -m venv venv
   source venv/bin/activate
   pip install -r requirements.txt
   pre-commit install
 ```
 
-for Windows:
+Development for Windows:
 
 ```bash
   git clone https://github.com/michele-lorenzoni/fnoise-meter.git
